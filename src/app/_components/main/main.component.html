@@ -1,0 +1,171 @@
+<main class="h-full">
+
+  <div class="flex justify-content-center p-2">
+    <h3>Porta reports demo</h3>
+  </div>
+
+  <p-card>
+    <p-stepper orientation="vertical" [linear]="true" [activeStep]="stepperActive" (activeStepChange)="onActiveStepChange($event)" #customStepper>
+      <p-stepperPanel header="Set up report parameters">
+        <ng-template pTemplate="content" let-nextCallback="nextCallback" let-index="index">
+
+          <form class="flex flex-column" #reqForm="ngForm">
+            <div class="border-2 border-dashed surface-border border-round surface-ground p-3">
+
+              <h6>Filter configuration</h6>
+
+              <div class="field grid">
+                <label for="startDate" class="col-12 mb-2 md:col-6 md:mb-0">Start date:</label>
+                <div class="col-12 md:col-6">
+                  <p-calendar id="startDate" name="startDate" styleClass="w-full"
+                              [required]="true"
+                              [(ngModel)]="selectedDateFrom"
+                              [firstDayOfWeek]="1"
+                              [minDate]="dateFromMin"
+                              [showTime]="true">
+
+                  </p-calendar>
+                </div>
+              </div>
+
+              <div class="field grid">
+                <label for="endDate" class="col-12 mb-2 md:col-6 md:mb-0">End date:</label>
+                <div class="col-12 md:col-6">
+                  <p-calendar id="endDate" name="endDate" styleClass="w-full"
+                              [required]="true"
+                              [(ngModel)]="selectedDateTo"
+                              [firstDayOfWeek]="1"
+                              [showTime]="true">
+                  </p-calendar>
+                </div>
+              </div>
+
+              <div class="field grid">
+                <label for="queue" class="col-12 mb-2 md:col-6 md:mb-0">Queue:</label>
+                <div class="col-12 md:col-6">
+                  <p-autoComplete id="queue" name="queue" styleClass="w-full" placeholder="Search for queues" field="name"
+                                  [overlayOptions]="{ appendTo: 'body' }"
+                                  [multiple]="true"
+                                  [suggestions]="queues"
+                                  [(ngModel)]="selectedQueues"
+                                  (completeMethod)="onQueueSearch($event)"
+                                  (onSelect)="onQueueSelect($event)">
+                  </p-autoComplete>
+                </div>
+              </div>
+
+              <h6>Export configuration</h6>
+
+              <div class="field grid">
+                <label for="workspaces" class="col-12 mb-2 md:col-6 md:mb-0">Workspace:</label>
+                <div class="col-12 md:col-6">
+                  <p-dropdown id="workspaces" name="workspaces" styleClass="w-full" optionLabel="name"
+                    [required]="true"
+                    [options]="workspaces"
+                    [(ngModel)]="selectedWorkspace">
+                  </p-dropdown>
+                </div>
+              </div>
+
+              <div class="field grid mb-0">
+                <label for="filename" class="col-12 mb-2 md:col-6 md:mb-0">File Name:</label>
+                <div class="col-12 md:col-6">
+                  <input id="filename" name="filename" type="text" pInputText class="w-full" required
+                    [(ngModel)]="selectedFilename" />
+                </div>
+              </div>
+
+            </div>
+          </form>
+
+          <div class="flex pt-4 justify-content-end">
+            <p-button
+              label="Next"
+              icon="pi pi-arrow-right"
+              iconPos="right"
+              [disabled]="!reqForm.form.valid"
+              (onClick)="goToBuildAndPreview()" />
+          </div>
+
+        </ng-template>
+      </p-stepperPanel>
+      <p-stepperPanel header="Build & preview">
+        <ng-template pTemplate="content" let-prevCallback="prevCallback" let-nextCallback="nextCallback" let-index="index">
+          <div class="flex flex-column">
+            <div class="border-2 border-dashed surface-border border-round surface-ground">
+
+              @if (loading) {
+
+                <div class="flex flex-column justify-content-center align-items-center w100 h100 m-3">
+                  <i class="pi pi-spin pi-spinner" style="font-size: 2rem;"></i>
+                  <p>{{statusMessage}}</p>
+                </div>
+
+              } @else {
+
+                <p-table currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+                  [value]="reportItems"
+                  [tableStyle]="{ 'min-width': '50rem' }"
+                  [paginator]="true"
+                  [rows]="5"
+                  [showCurrentPageReport]="true"
+                  [rowsPerPageOptions]="[5, 10, 20, 50]">
+                  <ng-template pTemplate="header">
+                    <tr>
+                      <th>Id</th>
+                      <th>Start Date</th>
+                      <th>Attribute 1</th>
+                      <th>Attribute 2</th>
+                      <th>Attribute 3</th>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-item>
+                    <tr>
+                      <td>{{ item.ConversationId }}</td>
+                      <td>{{ item.ConversationStart }}</td>
+                      <td>{{ item.ParticipantAttr1 }}</td>
+                      <td>{{ item.ParticipantAttr2 }}</td>
+                      <td>{{ item.ParticipantAttr3 }}</td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+
+              }
+
+            </div>
+          </div>
+          <div class="flex pt-4 justify-content-between">
+            <p-button label="Back" icon="pi pi-arrow-left" (onClick)="prevCallback.emit()" />
+            <p-button label="Export to Workspace" icon="pi pi-arrow-right" iconPos="right"
+                      [disabled]="reportItems.length === 0 || loading"
+                      (onClick)="buildDocumentAndExport()" />
+          </div>
+        </ng-template>
+      </p-stepperPanel>
+      <p-stepperPanel header="Export">
+        <ng-template pTemplate="content" let-prevCallback="prevCallback" let-index="index">
+          <div class="flex flex-column">
+            <div class="border-2 border-dashed surface-border border-round surface-ground">
+              @if (loading) {
+
+                <div class="flex flex-column justify-content-center align-items-center w100 h100 m-3">
+                  <i class="pi pi-spin pi-spinner" style="font-size: 2rem;"></i>
+                  <p>{{statusMessage}}</p>
+                </div>
+
+              } @else {
+
+                <div class="flex flex-column justify-content-center align-items-center w100 h100 m-3">
+                  <p-button label="Reset" icon="pi pi-arrow-left" (onClick)="reset()" />
+                </div>
+
+              }
+            </div>
+          </div>
+
+        </ng-template>
+      </p-stepperPanel>
+    </p-stepper>
+  </p-card>
+
+</main>
