@@ -1,0 +1,10 @@
+pages:
+  stage: deploy
+  script:
+    - ng build --configuration=production
+  artifacts:
+    paths:
+      - dist/demo-porta-reports
+  only:
+    - master
+

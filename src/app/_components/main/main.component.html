@@ -156,7 +156,8 @@
               } @else {
 
                 <div class="flex flex-column justify-content-center align-items-center w100 h100 m-3">
-                  <p-button label="Reset" icon="pi pi-arrow-left" (onClick)="reset()" />
+                  <p>{{statusMessage}}</p>
+                  <p-button label="Reset" (onClick)="reset()" />
                 </div>
 
               }
